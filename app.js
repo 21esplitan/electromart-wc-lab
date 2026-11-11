@@ -11,6 +11,35 @@ function setText(id, text) {
   document.getElementById(id).textContent = text;
 }
 
+// Set text and color it green for a gain, red for a loss. Zero stays neutral.
+function setSigned(id, text, value) {
+  const el = document.getElementById(id);
+  el.textContent = text;
+  el.className = Math.round(value) > 0 ? 'pos' : Math.round(value) < 0 ? 'neg' : '';
+}
+
+// Give a summary card a color: good, bad, warn or none.
+function setKpi(valueId, text, tone) {
+  const el = document.getElementById(valueId);
+  el.textContent = text;
+  el.parentElement.classList.remove('good', 'bad', 'warn');
+  if (tone) el.parentElement.classList.add(tone);
+}
+
+// Bars for DIO + DSO (cash tied up) and DPO (supplier funding), for each row.
+function drawChart(rows) {
+  const scale = Math.max(...rows.map(r => Math.max(r.dio + r.dso, r.dpo)), 1);
+  const pct = x => (Math.max(x, 0) / scale * 100).toFixed(2);
+  document.getElementById('chart').innerHTML = rows.map(r => `
+    <div class="bar-group">
+      <div class="bar-title"><span>${r.label}</span><span>CCC ${fmtDays(r.dio + r.dso - r.dpo)} days</span></div>
+      <div class="bar-line"><span class="bar-name">Cash tied up</span>
+        <div class="bar-track"><div class="bar-seg seg-inv" style="width:${pct(r.dio)}%"></div><div class="bar-seg seg-ar" style="width:${pct(r.dso)}%"></div></div></div>
+      <div class="bar-line"><span class="bar-name">Suppliers fund</span>
+        <div class="bar-track"><div class="bar-seg seg-ap" style="width:${pct(r.dpo)}%"></div></div></div>
+    </div>`).join('');
+}
+
 // Fill in the Before / After tables (no sliders involved).
 function showTables(before, after, days) {
   const b = metrics(before, days);
@@ -25,10 +54,10 @@ function showTables(before, after, days) {
   setText('inv-change', fmtDollars(before.inventory) + ' → ' + fmtDollars(after.inventory));
   setText('ar-change', fmtDollars(before.accounts_receivable) + ' → ' + fmtDollars(after.accounts_receivable));
   setText('ap-change', fmtDollars(before.accounts_payable) + ' → ' + fmtDollars(after.accounts_payable));
-  setText('inv-freed', fmtDollars(freed.inventory));
-  setText('ar-freed', fmtDollars(freed.receivables));
-  setText('ap-freed', fmtDollars(freed.payables));
-  setText('total-freed', fmtDollars(freed.total));
+  setSigned('inv-freed', fmtDollars(freed.inventory), freed.inventory);
+  setSigned('ar-freed', fmtDollars(freed.receivables), freed.receivables);
+  setSigned('ap-freed', fmtDollars(freed.payables), freed.payables);
+  setSigned('total-freed', fmtDollars(freed.total), freed.total);
 }
 
 // Wire up the sliders and buttons.
@@ -50,6 +79,11 @@ function setupLevers(before, after, assumptions) {
   }
 
   setText('net-days', String(assumptions.net_days));
+  setText('net-days-kpi', String(assumptions.net_days));
+  for (const key of ['dio', 'dso', 'dpo']) {
+    setText(key + '-mark-before', fmtDays(b[key]));
+    setText(key + '-mark-after', fmtDays(a[key]));
+  }
   setText('discount-label', fmtPercent(assumptions.supplier_discount).replace('.00%', '%'));
 
   function update() {
@@ -60,7 +94,8 @@ function setupLevers(before, after, assumptions) {
     setText('dso-value', fmtDays(dsoDays) + ' days');
     setText('dpo-value', fmtDays(dpoDays) + ' days');
 
-    setText('lever-ccc', fmtDays(dioDays + dsoDays - dpoDays) + ' days');
+    const newCcc = dioDays + dsoDays - dpoDays;
+    setText('lever-ccc', fmtDays(newCcc) + ' days');
 
     const implied = impliedBalances(before, dioDays, dsoDays, dpoDays, days);
     setText('lever-inv', fmtDollars(implied.inventory));
@@ -68,24 +103,42 @@ function setupLevers(before, after, assumptions) {
     setText('lever-ap', fmtDollars(implied.payables));
 
     const freed = leverCashFreed(before, implied);
-    setText('lever-inv-freed', fmtDollars(freed.inventory));
-    setText('lever-ar-freed', fmtDollars(freed.receivables));
-    setText('lever-ap-freed', fmtDollars(freed.payables));
-    setText('lever-total-freed', fmtDollars(freed.total));
+    setSigned('lever-inv-freed', fmtDollars(freed.inventory), freed.inventory);
+    setSigned('lever-ar-freed', fmtDollars(freed.receivables), freed.receivables);
+    setSigned('lever-ap-freed', fmtDollars(freed.payables), freed.payables);
+    setSigned('lever-total-freed', fmtDollars(freed.total), freed.total);
 
     const saved = interestSaved(freed.total, before.notes_payable, assumptions.bank_rate);
-    setText('lever-interest', fmtDollars(saved));
+    setSigned('lever-interest', fmtDollars(saved), saved);
     setText('interest-note', freed.total < 0
       ? 'Cash freed is negative, so ElectroMart must borrow more. The interest row shows the extra interest as a negative saving.'
       : 'The case’s own balance sheet shows ElectroMart kept part of its freed cash. This row assumes all of it, up to the Before bank line of ' +
         fmtDollars(before.notes_payable) + ', pays down the bank line at ' + fmtPercent(assumptions.bank_rate) + '.');
 
-    setText('lever-past-due', fmtDays(daysPastDue(dpoDays, assumptions.net_days)) + ' days');
+    const pastDue = daysPastDue(dpoDays, assumptions.net_days);
+    setText('lever-past-due', fmtDays(pastDue) + ' days');
+    document.getElementById('lever-past-due').className = pastDue > 0 ? 'warn-text' : '';
 
     const cost = discountCost(dpoDays, assumptions.supplier_discount, assumptions.discount_days, days);
     setText('lever-discount-cost', cost === null
       ? 'None (takes the discount)'
       : fmtPercent(cost));
+    document.getElementById('lever-discount-cost').className = cost === null ? 'pos' : '';
+
+    // Summary cards
+    const change = newCcc - b.ccc;
+    setKpi('kpi-ccc', fmtDays(newCcc) + ' days', null);
+    setText('kpi-ccc-sub', Math.abs(change) < 0.005 ? 'same as Before'
+      : fmtDays(Math.abs(change)) + ' days ' + (change < 0 ? 'shorter' : 'longer') + ' than Before');
+    setKpi('kpi-freed', fmtDollars(freed.total), Math.round(freed.total) > 0 ? 'good' : Math.round(freed.total) < 0 ? 'bad' : null);
+    setKpi('kpi-interest', fmtDollars(saved), Math.round(saved) > 0 ? 'good' : Math.round(saved) < 0 ? 'bad' : null);
+    setKpi('kpi-past-due', fmtDays(pastDue) + ' days', pastDue > 0 ? 'warn' : null);
+
+    drawChart([
+      { label: 'Before', dio: b.dio, dso: b.dso, dpo: b.dpo },
+      { label: 'After', dio: a.dio, dso: a.dso, dpo: a.dpo },
+      { label: 'Your levers', dio: dioDays, dso: dsoDays, dpo: dpoDays },
+    ]);
   }
 
   function setSliders(m) {
