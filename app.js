@@ -120,4 +120,13 @@ async function start() {
   }
 }
 
+// Register the service worker so the app installs and works offline.
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {
+      // The app still works without offline support.
+    });
+  });
+}
+
 start();
