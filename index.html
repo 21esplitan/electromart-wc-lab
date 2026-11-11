@@ -13,6 +13,45 @@
 
     <p id="error" class="error" hidden></p>
 
+    <section id="levers">
+      <h2>Levers</h2>
+      <p class="note">Move a slider to change the days. Revenue and COGS stay at their Before values.</p>
+      <div class="buttons">
+        <button type="button" id="set-before">Set to Before</button>
+        <button type="button" id="set-after">Set to After</button>
+      </div>
+
+      <div class="slider">
+        <label for="dio-slider">DIO (inventory days): <output id="dio-value"></output></label>
+        <input type="range" id="dio-slider" min="0" step="any">
+      </div>
+      <div class="slider">
+        <label for="dso-slider">DSO (receivable days): <output id="dso-value"></output></label>
+        <input type="range" id="dso-slider" min="0" step="any">
+      </div>
+      <div class="slider">
+        <label for="dpo-slider">DPO (payable days): <output id="dpo-value"></output></label>
+        <input type="range" id="dpo-slider" min="0" step="any">
+      </div>
+
+      <table id="lever-table">
+        <tbody>
+          <tr class="total"><th scope="row">New cash conversion cycle</th><td id="lever-ccc"></td></tr>
+          <tr><th scope="row">Inventory balance implied</th><td id="lever-inv"></td></tr>
+          <tr><th scope="row">Receivables balance implied</th><td id="lever-ar"></td></tr>
+          <tr><th scope="row">Payables balance implied</th><td id="lever-ap"></td></tr>
+          <tr><th scope="row">Cash freed by inventory</th><td id="lever-inv-freed"></td></tr>
+          <tr><th scope="row">Cash freed by receivables</th><td id="lever-ar-freed"></td></tr>
+          <tr><th scope="row">Cash freed by payables</th><td id="lever-ap-freed"></td></tr>
+          <tr class="total"><th scope="row">Total cash freed vs. Before</th><td id="lever-total-freed"></td></tr>
+          <tr><th scope="row">Interest saved per year <span class="sub">(assumes every freed dollar pays down the bank line)</span></th><td id="lever-interest"></td></tr>
+          <tr><th scope="row">Days paid past the due date <span class="sub">(net <span id="net-days"></span> days)</span></th><td id="lever-past-due"></td></tr>
+          <tr><th scope="row">Annual cost of skipping the <span id="discount-label"></span> discount</th><td id="lever-discount-cost"></td></tr>
+        </tbody>
+      </table>
+      <p class="note" id="interest-note"></p>
+    </section>
+
     <section>
       <h2>Days and cash conversion cycle</h2>
       <table id="days-table">

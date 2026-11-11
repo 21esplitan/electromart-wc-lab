@@ -83,7 +83,46 @@ function cashFreedFromDays(before, after, days) {
   };
 }
 
-// Show days with two decimals, dollars to the nearest dollar.
+// ---- Levers ----
+// Revenue and COGS are held at their Before values. A lever sets days, and the balance
+// it implies is days x annual COGS (or revenue) / days in year.
+function impliedBalances(before, daysDIO, daysDSO, daysDPO, days) {
+  return {
+    inventory: daysDIO * before.cogs / days,
+    receivables: daysDSO * before.revenue / days,
+    payables: daysDPO * before.cogs / days,
+  };
+}
+
+// Cash freed compared with the Before balance sheet:
+// a lower asset or a higher payable frees cash.
+function leverCashFreed(before, implied) {
+  const inventory = before.inventory - implied.inventory;
+  const receivables = before.accounts_receivable - implied.receivables;
+  const payables = implied.payables - before.accounts_payable;
+  return { inventory, receivables, payables, total: inventory + receivables + payables };
+}
+
+// Interest saved each year if every freed dollar pays down the bank line.
+// Cash freed counts only up to the bank line's Before balance. If cash freed is negative,
+// ElectroMart must borrow more, so the result is negative (extra interest).
+function interestSaved(cashFreedTotal, bankLineBefore, bankRate) {
+  return Math.min(cashFreedTotal, bankLineBefore) * bankRate;
+}
+
+// Days paid past the net due date, never less than zero.
+function daysPastDue(dpoDays, netDays) { return Math.max(0, dpoDays - netDays); }
+
+// Nominal annual cost of skipping the supplier discount:
+// d / (1 - d) x 365 / (days paid - discount days).
+// Returns null when DPO is within the discount period, because ElectroMart takes the discount.
+function discountCost(dpoDays, discount, discountDays, days) {
+  if (dpoDays <= discountDays) return null;
+  return discount / (1 - discount) * days / (dpoDays - discountDays);
+}
+
+// Show days with two decimals, dollars to the nearest dollar, rates as percents.
+function fmtPercent(x) { return (x * 100).toFixed(2) + '%'; }
 function fmtDays(x) { return x.toFixed(2); }
 function fmtDollars(x) {
   const r = Math.round(x);
@@ -94,6 +133,8 @@ function fmtDollars(x) {
 if (typeof module !== 'undefined') {
   module.exports = {
     parseCSV, statementsFromRows, assumptionsFromRows,
-    dio, dso, dpo, ccc, metrics, cashFreed, cashFreedFromDays, fmtDays, fmtDollars,
+    dio, dso, dpo, ccc, metrics, cashFreed, cashFreedFromDays,
+    impliedBalances, leverCashFreed, interestSaved, daysPastDue, discountCost,
+    fmtDays, fmtDollars, fmtPercent,
   };
 }

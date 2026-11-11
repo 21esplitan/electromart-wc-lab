@@ -34,5 +34,27 @@ tbody th { text-align: left; font-weight: 500; }
 td { text-align: right; font-variant-numeric: tabular-nums; }
 tr.total th, tr.total td { font-weight: 700; border-bottom: none; border-top: 2px solid #1a2433; }
 
+.buttons { display: flex; gap: 8px; margin: 12px 0; }
+button {
+  flex: 1;
+  min-height: 44px;
+  font: inherit;
+  font-weight: 600;
+  color: #fff;
+  background: #1f4e8c;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+button:hover { background: #17396a; }
+
+.slider { margin-bottom: 14px; }
+.slider label { display: block; font-weight: 500; margin-bottom: 4px; }
+.slider output { font-weight: 700; font-variant-numeric: tabular-nums; }
+input[type="range"] { width: 100%; }
+
+#lever-table { margin-top: 8px; }
+.sub { display: block; font-size: 0.8rem; font-weight: 400; color: #4a5568; }
+
 .note { font-size: 0.85rem; color: #4a5568; margin: 8px 0 0; }
 .error { background: #fde8e8; color: #8a1f1f; padding: 10px; border-radius: 6px; }
