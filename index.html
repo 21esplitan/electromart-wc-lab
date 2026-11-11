@@ -11,42 +11,54 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <main>
+  <header class="hero">
     <h1>ElectroMart cash conversion cycle</h1>
-    <p class="lead">How many days a dollar is tied up in operations, before and after the changes.</p>
+    <p>How many days a dollar is tied up in operations. Move the levers to see the cash freed.</p>
+  </header>
 
+  <main>
     <p id="error" class="error" hidden></p>
 
     <section id="levers">
+      <div class="summary" aria-live="polite">
+        <div class="kpi kpi-ccc"><span class="kpi-label">Cash conversion cycle</span><span class="kpi-value" id="kpi-ccc"></span><span class="kpi-sub" id="kpi-ccc-sub"></span></div>
+        <div class="kpi"><span class="kpi-label">Cash freed</span><span class="kpi-value" id="kpi-freed"></span><span class="kpi-sub">vs. Before</span></div>
+        <div class="kpi"><span class="kpi-label">Interest saved / year</span><span class="kpi-value" id="kpi-interest"></span><span class="kpi-sub">if it pays the bank line</span></div>
+        <div class="kpi"><span class="kpi-label">Paid past due</span><span class="kpi-value" id="kpi-past-due"></span><span class="kpi-sub">net <span id="net-days-kpi"></span> terms</span></div>
+      </div>
+
       <h2>Levers</h2>
       <p class="note">Move a slider to change the days. Revenue and COGS stay at their Before values.</p>
       <div class="buttons">
-        <button type="button" id="set-before">Set to Before</button>
-        <button type="button" id="set-after">Set to After</button>
+        <button type="button" id="set-before" class="btn-before">Set to Before</button>
+        <button type="button" id="set-after" class="btn-after">Set to After</button>
       </div>
 
-      <div class="slider">
-        <label for="dio-slider">DIO (inventory days): <output id="dio-value"></output></label>
+      <div class="slider slider-dio">
+        <label for="dio-slider"><span class="dot"></span>DIO (inventory days) <output id="dio-value"></output></label>
         <input type="range" id="dio-slider" min="0" step="any">
+        <div class="marks">Before <b id="dio-mark-before"></b> · After <b id="dio-mark-after"></b></div>
       </div>
-      <div class="slider">
-        <label for="dso-slider">DSO (receivable days): <output id="dso-value"></output></label>
+      <div class="slider slider-dso">
+        <label for="dso-slider"><span class="dot"></span>DSO (receivable days) <output id="dso-value"></output></label>
         <input type="range" id="dso-slider" min="0" step="any">
+        <div class="marks">Before <b id="dso-mark-before"></b> · After <b id="dso-mark-after"></b></div>
       </div>
-      <div class="slider">
-        <label for="dpo-slider">DPO (payable days): <output id="dpo-value"></output></label>
+      <div class="slider slider-dpo">
+        <label for="dpo-slider"><span class="dot"></span>DPO (payable days) <output id="dpo-value"></output></label>
         <input type="range" id="dpo-slider" min="0" step="any">
+        <div class="marks">Before <b id="dpo-mark-before"></b> · After <b id="dpo-mark-after"></b></div>
       </div>
 
       <table id="lever-table">
         <tbody>
           <tr class="total"><th scope="row">New cash conversion cycle</th><td id="lever-ccc"></td></tr>
-          <tr><th scope="row">Inventory balance implied</th><td id="lever-inv"></td></tr>
-          <tr><th scope="row">Receivables balance implied</th><td id="lever-ar"></td></tr>
-          <tr><th scope="row">Payables balance implied</th><td id="lever-ap"></td></tr>
-          <tr><th scope="row">Cash freed by inventory</th><td id="lever-inv-freed"></td></tr>
-          <tr><th scope="row">Cash freed by receivables</th><td id="lever-ar-freed"></td></tr>
-          <tr><th scope="row">Cash freed by payables</th><td id="lever-ap-freed"></td></tr>
+          <tr class="row-inv"><th scope="row">Inventory balance implied</th><td id="lever-inv"></td></tr>
+          <tr class="row-ar"><th scope="row">Receivables balance implied</th><td id="lever-ar"></td></tr>
+          <tr class="row-ap"><th scope="row">Payables balance implied</th><td id="lever-ap"></td></tr>
+          <tr class="row-inv"><th scope="row">Cash freed by inventory</th><td id="lever-inv-freed"></td></tr>
+          <tr class="row-ar"><th scope="row">Cash freed by receivables</th><td id="lever-ar-freed"></td></tr>
+          <tr class="row-ap"><th scope="row">Cash freed by payables</th><td id="lever-ap-freed"></td></tr>
           <tr class="total"><th scope="row">Total cash freed vs. Before</th><td id="lever-total-freed"></td></tr>
           <tr><th scope="row">Interest saved per year <span class="sub">(assumes every freed dollar pays down the bank line)</span></th><td id="lever-interest"></td></tr>
           <tr><th scope="row">Days paid past the due date <span class="sub">(net <span id="net-days"></span> days)</span></th><td id="lever-past-due"></td></tr>
@@ -56,6 +68,17 @@
       <p class="note" id="interest-note"></p>
     </section>
 
+    <section id="chart-section">
+      <h2>Days compared</h2>
+      <p class="note">Inventory and receivable days add up to how long cash is tied up. Payable days are how long suppliers fund it. The gap is the cash conversion cycle.</p>
+      <div id="chart"></div>
+      <div class="legend">
+        <span><i class="sw sw-inv"></i>DIO</span>
+        <span><i class="sw sw-ar"></i>DSO</span>
+        <span><i class="sw sw-ap"></i>DPO</span>
+      </div>
+    </section>
+
     <section>
       <h2>Days and cash conversion cycle</h2>
       <table id="days-table">
@@ -63,9 +86,9 @@
           <tr><th scope="col">Measure</th><th scope="col">Before</th><th scope="col">After</th></tr>
         </thead>
         <tbody>
-          <tr><th scope="row">DIO (inventory days)</th><td id="dio-before"></td><td id="dio-after"></td></tr>
-          <tr><th scope="row">DSO (receivable days)</th><td id="dso-before"></td><td id="dso-after"></td></tr>
-          <tr><th scope="row">DPO (payable days)</th><td id="dpo-before"></td><td id="dpo-after"></td></tr>
+          <tr class="row-inv"><th scope="row">DIO (inventory days)</th><td id="dio-before"></td><td id="dio-after"></td></tr>
+          <tr class="row-ar"><th scope="row">DSO (receivable days)</th><td id="dso-before"></td><td id="dso-after"></td></tr>
+          <tr class="row-ap"><th scope="row">DPO (payable days)</th><td id="dpo-before"></td><td id="dpo-after"></td></tr>
           <tr class="total"><th scope="row">Cash conversion cycle</th><td id="ccc-before"></td><td id="ccc-after"></td></tr>
         </tbody>
       </table>
@@ -79,9 +102,9 @@
           <tr><th scope="col">Lever</th><th scope="col">Balance change</th><th scope="col">Cash freed</th></tr>
         </thead>
         <tbody>
-          <tr><th scope="row">Inventory</th><td id="inv-change"></td><td id="inv-freed"></td></tr>
-          <tr><th scope="row">Receivables</th><td id="ar-change"></td><td id="ar-freed"></td></tr>
-          <tr><th scope="row">Payables</th><td id="ap-change"></td><td id="ap-freed"></td></tr>
+          <tr class="row-inv"><th scope="row">Inventory</th><td id="inv-change"></td><td id="inv-freed"></td></tr>
+          <tr class="row-ar"><th scope="row">Receivables</th><td id="ar-change"></td><td id="ar-freed"></td></tr>
+          <tr class="row-ap"><th scope="row">Payables</th><td id="ap-change"></td><td id="ap-freed"></td></tr>
           <tr class="total"><th scope="row">Total</th><td></td><td id="total-freed"></td></tr>
         </tbody>
       </table>
