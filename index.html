@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ElectroMart CCC</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main>
+    <h1>ElectroMart cash conversion cycle</h1>
+    <p class="lead">How many days a dollar is tied up in operations, before and after the changes.</p>
+
+    <p id="error" class="error" hidden></p>
+
+    <section>
+      <h2>Days and cash conversion cycle</h2>
+      <table id="days-table">
+        <thead>
+          <tr><th scope="col">Measure</th><th scope="col">Before</th><th scope="col">After</th></tr>
+        </thead>
+        <tbody>
+          <tr><th scope="row">DIO (inventory days)</th><td id="dio-before"></td><td id="dio-after"></td></tr>
+          <tr><th scope="row">DSO (receivable days)</th><td id="dso-before"></td><td id="dso-after"></td></tr>
+          <tr><th scope="row">DPO (payable days)</th><td id="dpo-before"></td><td id="dpo-after"></td></tr>
+          <tr class="total"><th scope="row">Cash conversion cycle</th><td id="ccc-before"></td><td id="ccc-after"></td></tr>
+        </tbody>
+      </table>
+      <p class="note">CCC = DIO + DSO − DPO, using a <span id="days-in-year"></span>-day year.</p>
+    </section>
+
+    <section>
+      <h2>Cash freed by each lever</h2>
+      <table id="cash-table">
+        <thead>
+          <tr><th scope="col">Lever</th><th scope="col">Balance change</th><th scope="col">Cash freed</th></tr>
+        </thead>
+        <tbody>
+          <tr><th scope="row">Inventory</th><td id="inv-change"></td><td id="inv-freed"></td></tr>
+          <tr><th scope="row">Receivables</th><td id="ar-change"></td><td id="ar-freed"></td></tr>
+          <tr><th scope="row">Payables</th><td id="ap-change"></td><td id="ap-freed"></td></tr>
+          <tr class="total"><th scope="row">Total</th><td></td><td id="total-freed"></td></tr>
+        </tbody>
+      </table>
+      <p class="note">A drop in inventory or receivables frees cash. A rise in payables frees cash.</p>
+    </section>
+  </main>
+
+  <script src="ccc.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
